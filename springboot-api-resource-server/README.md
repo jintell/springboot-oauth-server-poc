@@ -12,6 +12,24 @@ This API have the following endpoints:
 - [GET /hello](): *protected endpoint, requires any authenticated user*
 - [GET /hello-admin](): *protected endpoint, requires authenticated user with role ADMIN*
 
+### Build the artifact
+
+change to the authorization directory and then build with:
+
+`./mvnw clean package`
+
+### Run the Resource Api Server
+
+`java -jar target/springboot-api-resource-server-0.0.1-SNAPSHOT.jar`
+
+### Alternatively, Build and Run with a Single maven command.
+*This option will not build the artifact (**springboot-api-resource-server-0.0.1-SNAPSHOT.jar**) for you*
+
+`./mvnw spring-boot:run`
+
+### Stop the server
+
+*Use Control+C to terminate the running server*
 
 ### Guides
 

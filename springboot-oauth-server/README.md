@@ -13,6 +13,25 @@ It Also configured 3 clients for use which are:
 - **client_serverapp**: for server side app, and should use Grant Type = Client Credentials
 - **client_mobile**: for mobile app, and should use Grant Type = Authorization Code
 
+### Build the artifact
+
+change to the authorization directory and then build with:
+
+`./mvnw clean package`
+
+### Run the Authorization Server 
+
+`java -jar target/springboot-oauth-server-0.0.1-SNAPSHOT.jar`
+
+### Alternatively, Build and Run with a Single maven command.
+*This option will not build the artifact (**springboot-oauth-server-0.0.1-SNAPSHOT.jar**) for you*
+
+`./mvnw spring-boot:run`
+
+### Stop the server
+
+*Use Control+C to terminate the running server*
+
 ### Guides
 
 The following guides illustrate how to use some features concretely:

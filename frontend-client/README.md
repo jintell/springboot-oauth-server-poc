@@ -8,11 +8,26 @@ the client render's the home page having 2 buttons:
 - button 2 with title "hello-admin" invokes the api endpoint of resource server "GET /hello-admin" and 
 print response in the console
 
+## install the needed package
+
+### `npm install`
+
+## Run the Front End
+
+### `npm run start`
+
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+### Stop the server
+
+*Use Control+C to terminate the running server*
+
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+### `npm run start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
