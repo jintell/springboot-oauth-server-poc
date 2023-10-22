@@ -1,0 +1,10 @@
+server:
+  port: 9000
+
+issuer:
+  uri: http://127.0.0.1:9000
+
+logging:
+  level:
+#    root: debug
+    org.springframework.security: trace

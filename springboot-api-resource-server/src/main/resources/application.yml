@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri: http://127.0.0.1:9000
+
+oauth2:
+  client:
+    id: client_spa
+    secret: spa_secret
+
+  authorize:
+    url: http://127.0.0.1:9000/oauth2/authorize
+    scope: openid
+    challengeMethod: S256
+
+  authorization:
+    url: http://127.0.0.1:9000/oauth2/token
+    grant_type: authorization_code
+    redirect_uri: http://127.0.0.1:3000/process/auth/login
+
+  logout:
+    url: http://127.0.0.1:9000/logout

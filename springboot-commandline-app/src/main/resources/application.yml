@@ -1,0 +1,14 @@
+server:
+  port: 8081
+
+authorization:
+  server:
+    url: http://127.0.0.1:9000/oauth2/token
+    clientId: client_serverapp
+    clientSecret: serverapp_secret
+    scope: ADMIN
+  grantType: client_credentials
+
+clientApp:
+  server:
+    url: http://127.0.0.1:8080/hello-admin
