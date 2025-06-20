@@ -1,6 +1,7 @@
 package com.jade.platform.service;
 
 import com.jade.platform.constant.AppUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -16,6 +17,7 @@ import java.util.UUID;
  * @Email: josleke@gmail.com, josiah.adetayo@meld-tech.com
  * @Date: 9/24/23
  */
+@Slf4j
 @Service
 public class ResourceOwnerService {
 
@@ -61,6 +63,7 @@ public class ResourceOwnerService {
     private String generateCodeChallenge(String deviceId) {
         try {
             String codeVerifier = generateCodeVerifier();
+            log.info("verifier: {}", codeVerifier);
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
             String encodedVerifier = Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
