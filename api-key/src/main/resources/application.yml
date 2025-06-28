@@ -1,2 +1,17 @@
 security:
   api-key: 57495903-5db9-4719-9d5e-f7dc5b0d7715
+  admin-api-key: admin-secret-key
+springdoc:
+  server-url: http://localhost:8080
+
+spring:
+  security:
+    user:
+      name: spring
+      password: spring
+
+
+logging:
+  level:
+    web: TRACE
+    org.springframework.web: TRACE

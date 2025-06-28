@@ -3,6 +3,8 @@ package org.meldtech.platform.security;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
 
+import java.util.Map;
+
 public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
     private final String apiKey;
 
@@ -20,5 +22,9 @@ public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
     @Override
     public Object getPrincipal() {
         return "API_KEY_USER";
+    }
+
+    public Map<String, Object> getDetails() {
+        return Map.of("error", "invalid_api_key", "message", "User not authenticated.");
     }
 }

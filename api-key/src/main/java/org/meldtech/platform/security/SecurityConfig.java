@@ -2,9 +2,17 @@ package org.meldtech.platform.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 
+@EnableReactiveMethodSecurity
+//@EnableWebFluxSecurity
 @Configuration
 public class SecurityConfig {
     private final ApiKeyAuthFilter apiKeyAuthFilter;
@@ -17,16 +25,49 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(ServerHttpSecurity.CorsSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .securityContextRepository(apiKeyAuthFilter)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/public/**").permitAll()
-                        .pathMatchers("/webjars/**").permitAll()
-                        .pathMatchers("/swagger-ui/**").permitAll()
-                        .pathMatchers("/swagger-ui**").permitAll()
+                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                        .pathMatchers(AUTH_WHITELIST).permitAll()
                         .anyExchange().authenticated()
                 )
                 .build();
     }
+
+//    @Bean
+//    public SecurityWebFilterChain adminSecurityChain(ServerHttpSecurity http) {
+//        return http
+//                .securityMatcher(ServerWebExchangeMatchers.pathMatchers("/admin/**"))
+//                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+//                .cors(ServerHttpSecurity.CorsSpec::disable)
+//                .authorizeExchange(ex -> ex
+//                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
+//                        .pathMatchers(AUTH_WHITELIST).permitAll()
+//                        .anyExchange().hasRole("ADMIN")
+//                )
+//                .securityContextRepository(apiKeyAuthFilter)
+//                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+//                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+//                .build();
+//    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    private static final String[] AUTH_WHITELIST = {
+            "/public/**",
+            "/webjars/**",
+            // -- Swagger UI v3 (OpenAPI)
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/.well-known/**",
+            // other public endpoints of your API may be appended to this array
+    };
+
 }
