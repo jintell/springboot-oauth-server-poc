@@ -18,6 +18,13 @@ dependencies {
     implementation 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
     implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0"
+//    Bucket4j core
+    implementation "com.bucket4j:bucket4j-core:8.10.1"
+//    Redis (Lettuce) extension for Bucket4j
+    implementation "com.bucket4j:bucket4j-redis:8.10.1"
+    implementation "io.lettuce:lettuce-core:6.3.1.RELEASE"
+    // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-redis
+//    implementation("com.bucket4j:bucket4j_jdk17-redis:8.14.0")
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'io.projectreactor:reactor-test'

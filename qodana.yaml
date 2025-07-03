@@ -16,7 +16,7 @@ profile:
 #exclude:
 #  - name: <SomeDisabledInspectionId>
 #    paths:
-#      - <path/where/not/run/inspection>
+#      - <path/where/not/run.sh/inspection>
 
 projectJDK: "17" #(Applied in CI/CD pipeline)
 

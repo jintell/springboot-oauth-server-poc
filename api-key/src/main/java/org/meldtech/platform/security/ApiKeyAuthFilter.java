@@ -1,6 +1,10 @@
 package org.meldtech.platform.security;
 
+import lombok.SneakyThrows;
+import org.meldtech.platform.exception.TooManyRequestException;
+import org.meldtech.platform.exception.UnAuthorizedException;
 import org.meldtech.platform.model.ApiClient;
+import org.meldtech.platform.service.RateLimiterService;
 import org.meldtech.platform.storage.RedisApiKeyStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -16,7 +20,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
@@ -25,6 +31,7 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
     private String adminKey;
 
     private final RedisApiKeyStore redisApiKeyStore;
+    private final RateLimiterService rateLimiterService;
 
     private static final String API_KEY_HEADER = "X-API-KEY";
     private static final String ADMIN_API_KEY_HEADER = "X-ADMIN-API-KEY";
@@ -34,12 +41,13 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
     private static final String PUBLIC_ENDPOINT = "/public";
     private static final String ADMIN_ENDPOINT = "/admin";
 
-    public ApiKeyAuthFilter(RedisApiKeyStore redisApiKeyStore) {
+    public ApiKeyAuthFilter(RedisApiKeyStore redisApiKeyStore, RateLimiterService rateLimiterService) {
         this.redisApiKeyStore = redisApiKeyStore;
+        this.rateLimiterService = rateLimiterService;
     }
 
     @Override
-    public Mono<SecurityContext> load(ServerWebExchange exchange) {
+    public Mono<SecurityContext> load(ServerWebExchange exchange) throws UnAuthorizedException {
         ServerHttpRequest request = exchange.getRequest();
         String apiKey = request.getHeaders().getFirst(API_KEY_HEADER);
         String adminApiKey = request.getHeaders().getFirst(ADMIN_API_KEY_HEADER);
@@ -66,13 +74,24 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
         }
 
         if (url.contains(API_ENDPOINT) && apiKey == null) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return Mono.empty();
+            throw new UnAuthorizedException("Unauthorized access to API");
         }
 
         System.out.println("apiKey: "+apiKey);
-        return redisApiKeyStore.validateClient(apiKey)
-                .flatMap(this::createSecurityContext);
+        return  rateLimiterService.isAllowed(apiKey)
+                        .flatMap(allowed ->  {
+                            if (!allowed) {
+                                exchange.getResponse().getHeaders().add("X-Rate-Limit-Retry-After-Seconds",
+                                        Duration.ofSeconds(60).toString());
+                                exchange.getResponse().getHeaders().add("Content-Type",
+                                        "text/plain;charset=UTF-8");
+                                exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+                                throw new TooManyRequestException("Too many requests");
+                            }
+                            return redisApiKeyStore.validateClient(apiKey)
+                                    .flatMap(this::createSecurityContext)
+                                    .switchIfEmpty(Mono.error(() -> new UnAuthorizedException("Unauthorized access to API")));
+                        });
     }
 
     @Override

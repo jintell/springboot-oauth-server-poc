@@ -1,4 +1,4 @@
-package org.meldtech.platform.security;
+package org.meldtech.platform.config;
 
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.OpenAPI;
