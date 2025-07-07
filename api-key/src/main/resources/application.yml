@@ -1,5 +1,5 @@
 security:
-  api-key: 57495903-5db9-4719-9d5e-f7dc5b0d7715
+  api-key: ${API_KEY:84d6ffff-9e87-4112-858b-debe5db19481}
   admin-api-key: admin-secret-key
 springdoc:
   server-url: http://localhost:8080
@@ -17,7 +17,7 @@ spring:
 
 rate:
   limit:
-    capacity: 100
+    capacity: 10
     durationInMinutes: 1
     noOfTokens: 1
 

@@ -2,6 +2,8 @@ package org.meldtech.platform.web;
 
 import jakarta.validation.Valid;
 import org.meldtech.platform.model.ApiClient;
+import org.meldtech.platform.model.RateLimitStatus;
+import org.meldtech.platform.service.RateLimiterService;
 import org.meldtech.platform.storage.RedisApiKeyStore;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +16,11 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class HelloController {
     private final RedisApiKeyStore apiKeyStore;
+    private final RateLimiterService rateLimiterService;
 
-    public HelloController(RedisApiKeyStore apiKeyStore) {
+    public HelloController(RedisApiKeyStore apiKeyStore, RateLimiterService rateLimiterService) {
         this.apiKeyStore = apiKeyStore;
+        this.rateLimiterService = rateLimiterService;
     }
 
     @GetMapping("/hello")
@@ -57,5 +61,12 @@ public class HelloController {
                 .map(deleted -> deleted ?
                         ResponseEntity.ok("Deleted") :
                         ResponseEntity.notFound().build());
+    }
+
+    @GetMapping( "/admin/rate-limit/{key}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ResponseEntity<RateLimitStatus>> getRateLimitStatus(@PathVariable String key) {
+        return rateLimiterService.getStatus(key)
+                .map(ResponseEntity::ok);
     }
 }

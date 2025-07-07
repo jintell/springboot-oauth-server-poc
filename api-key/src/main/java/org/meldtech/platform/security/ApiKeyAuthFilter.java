@@ -79,6 +79,7 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
 
         System.out.println("apiKey: "+apiKey);
         return  rateLimiterService.isAllowed(apiKey)
+                .doOnNext(System.out::println)
                         .flatMap(allowed ->  {
                             if (!allowed) {
                                 exchange.getResponse().getHeaders().add("X-Rate-Limit-Retry-After-Seconds",
