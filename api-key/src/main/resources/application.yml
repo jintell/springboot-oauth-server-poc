@@ -26,3 +26,9 @@ logging:
   level:
     web: TRACE
     org.springframework.web: TRACE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

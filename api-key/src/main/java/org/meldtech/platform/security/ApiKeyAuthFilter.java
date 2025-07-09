@@ -5,6 +5,7 @@ import org.meldtech.platform.exception.TooManyRequestException;
 import org.meldtech.platform.exception.UnAuthorizedException;
 import org.meldtech.platform.model.ApiClient;
 import org.meldtech.platform.service.RateLimiterService;
+import org.meldtech.platform.service.UsageTrackerService;
 import org.meldtech.platform.storage.RedisApiKeyStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -32,6 +33,7 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
 
     private final RedisApiKeyStore redisApiKeyStore;
     private final RateLimiterService rateLimiterService;
+    private final UsageTrackerService trackerService;
 
     private static final String API_KEY_HEADER = "X-API-KEY";
     private static final String ADMIN_API_KEY_HEADER = "X-ADMIN-API-KEY";
@@ -41,9 +43,12 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
     private static final String PUBLIC_ENDPOINT = "/public";
     private static final String ADMIN_ENDPOINT = "/admin";
 
-    public ApiKeyAuthFilter(RedisApiKeyStore redisApiKeyStore, RateLimiterService rateLimiterService) {
+    public ApiKeyAuthFilter(RedisApiKeyStore redisApiKeyStore,
+                            RateLimiterService rateLimiterService,
+                            UsageTrackerService trackerService) {
         this.redisApiKeyStore = redisApiKeyStore;
         this.rateLimiterService = rateLimiterService;
+        this.trackerService = trackerService;
     }
 
     @Override
@@ -58,6 +63,11 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
         System.out.println("Method "+method);
 
         if((url.contains(SWAGGER_DOC) || url.contains(SWAGGER)) && apiKey == null) {
+            Authentication auth = new ApiKeyAuthenticationToken(url, true);
+            return Mono.just(new SecurityContextImpl(auth));
+        }
+
+         if(method.equals(HttpMethod.OPTIONS)) {
             Authentication auth = new ApiKeyAuthenticationToken(url, true);
             return Mono.just(new SecurityContextImpl(auth));
         }
@@ -77,22 +87,22 @@ public class ApiKeyAuthFilter implements ServerSecurityContextRepository {
             throw new UnAuthorizedException("Unauthorized access to API");
         }
 
-        System.out.println("apiKey: "+apiKey);
-        return  rateLimiterService.isAllowed(apiKey)
-                .doOnNext(System.out::println)
-                        .flatMap(allowed ->  {
-                            if (!allowed) {
-                                exchange.getResponse().getHeaders().add("X-Rate-Limit-Retry-After-Seconds",
-                                        Duration.ofSeconds(60).toString());
-                                exchange.getResponse().getHeaders().add("Content-Type",
-                                        "text/plain;charset=UTF-8");
-                                exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                                throw new TooManyRequestException("Too many requests");
-                            }
-                            return redisApiKeyStore.validateClient(apiKey)
-                                    .flatMap(this::createSecurityContext)
-                                    .switchIfEmpty(Mono.error(() -> new UnAuthorizedException("Unauthorized access to API")));
-                        });
+        return  trackerService.recordUsage(apiKey)
+                        .then(rateLimiterService.isAllowed(apiKey)
+                                .flatMap(allowed ->  {
+                                    if (!allowed) {
+                                        exchange.getResponse().getHeaders().add("X-Rate-Limit-Retry-After-Seconds",
+                                                Duration.ofSeconds(60).toString());
+                                        exchange.getResponse().getHeaders().add("Content-Type",
+                                                "text/plain;charset=UTF-8");
+                                        exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+                                        throw new TooManyRequestException("Too many requests");
+                                    }
+                                    return redisApiKeyStore.validateClient(apiKey)
+                                            .flatMap(this::createSecurityContext)
+                                            .switchIfEmpty(Mono.error(() -> new UnAuthorizedException("Unauthorized access to API")));
+                                })
+                        );
     }
 
     @Override

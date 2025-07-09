@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Objects;
 
 //This limits each key to 100 requests per minute.
 @Service
@@ -44,10 +43,6 @@ public class RateLimiterService {
                 .doOnNext(bucketProxy -> System.out.println("Key: " + bucketKey + " proxy: " + bucketProxy))
                 .switchIfEmpty(setLimitConfigFor(bucketKey, new RateLimitStatus(noOfTokens, capacity, durationInMinutes) ))
                 .doOnNext(bucketProxy -> System.out.println("Key: " + bucketKey + " proxy2: " + bucketProxy.getAvailableTokens()))
-//                Mono.fromCallable(() -> proxyManager.builder()
-//                        .build(bucketKey.getBytes(), () -> BucketConfiguration.builder()
-//                                .addLimit(simple(capacity, Duration.ofMinutes(durationInMinutes)))
-//                                .build()))
                 .flatMap(bucket -> Mono.just(bucket.tryConsume(noOfTokens)));
     }
 
@@ -64,14 +59,6 @@ public class RateLimiterService {
                                 })
                         );
 
-//                Mono.fromCallable(() -> proxyManager.builder()
-//                        .build(bucketKey.getBytes(), () -> getLimitConfigFor(bucketKey)))
-//                .map(bucket -> {
-//                    long remaining = bucket.getAvailableTokens();
-//                    long capacity = bucket.getConfiguration().getBandwidths()[0].getCapacity();
-//                    long refillNanos = bucket.getDelayNanosAfterConsumption(1);
-//                    return new RateLimitStatus(remaining, capacity, refillNanos);
-//                });
     }
 
     private Mono<BucketProxy> setLimitConfigFor(String bucketKey, RateLimitStatus limitStatus) {
@@ -81,7 +68,6 @@ public class RateLimiterService {
                                 // Refill 20 every 10 seconds
                                 // Better UX than fixed window
                                 .addLimit(burst(limitStatus.capacity(), 20, Duration.ofSeconds(10)))
-//                                .addLimit(simple(limitStatus.capacity(), Duration.ofMinutes(limitStatus.nanosToRefill())))
                                 .build()));
     }
 
@@ -96,17 +82,6 @@ public class RateLimiterService {
                 .orElse(BucketConfiguration.builder().build());
     }
 
-//    private BucketConfiguration getLimitConfigFor(String apiKey) {
-//        // fallback default
-//        ApiKeyInfo defaultInfo = new ApiKeyInfo("unknown", System.currentTimeMillis(), new RateLimitConfig(100, 60));
-//
-//        ApiKeyInfo info = redisApiKeyStore.getKeyInfo(apiKey).blockOptional().orElse(defaultInfo);
-//
-//        RateLimitConfig cfg = info.getRateLimit();
-//        return Bucket4j.configurationBuilder()
-//                .addLimit(Bandwidth.simple(cfg.getLimit(), Duration.ofSeconds(cfg.getDurationSec())))
-//                .build();
-//    }
 
 //    fixed window
     private Bandwidth simple(long capacity, Duration refillPeriod) {
@@ -131,8 +106,6 @@ public class RateLimiterService {
 
     private Mono<RateLimitStatus> checkForLimitStatus(ApiClient apiClient) {
         System.out.println("Check for empty key: " + apiClient.rateLimitStatus());
-        RateLimitStatus status = apiClient.rateLimitStatus();
-        return Mono.justOrEmpty(status);
-//        return Objects.nonNull(status) ? Mono.just(apiClient.rateLimitStatus()) : Mono.empty();
+        return Mono.justOrEmpty(apiClient.rateLimitStatus());
     }
 }

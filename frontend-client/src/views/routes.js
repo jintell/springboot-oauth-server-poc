@@ -4,6 +4,7 @@ import {
     ProcessLogin as ProcessLoginView,
     Dashboard as DashboardView,
 } from '../views';
+import {ApiKeyUsageDashboard} from "./ApiKeyUsageDashboard";
 
 const routes = [
     {
@@ -21,6 +22,10 @@ const routes = [
     {
         path: '/dashboard',
         renderer: (params = {}) => <DashboardView {...params} />,
+    },
+    {
+        path: '/dashboard-api',
+        renderer: (params = {}) => <ApiKeyUsageDashboard {...params} />,
     },
 ];
 
