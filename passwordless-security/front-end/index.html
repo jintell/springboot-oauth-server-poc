@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Passkey Demo</title>
+</head>
+<body>
+<h1>Passkey Demo</h1>
+<input id="username" placeholder="Username" /><br><br>
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
+
+<script>
+    async function register() {
+        const username = document.getElementById('username').value;
+        const opts = await fetch(`http://localhost:8181/webauthn/register/options?username=${username}`).then(r => r.json());
+
+        // Get the public key options json object and store it in the publicKeyOption variable.
+        const publicKeyOption = buildOptions(opts);
+
+        // Create a new credential using the publicKeyOption object.
+        const cred = await navigator.credentials.create({ publicKey: publicKeyOption });
+
+        // Create a registration response object.
+        const response = {
+            username: username,
+            credential: {
+                id: cred.id,
+                rawId: arrayBufferToBase64_v2(cred.rawId),
+                type: cred.type,
+                clientExtensionResults: updateClientExtensionResults(cred),
+                response: {
+                    clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
+                    attestationObject: arrayBufferToBase64_v2(cred.response.attestationObject)
+                }
+            }
+        };
+
+        // Send the registration response to the server. Step two ceremony
+        const result = await fetch(`http://localhost:8181/webauthn/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response)
+        });
+
+        result.ok ? alert("Registration complete") :
+        alert("Registration not completed due to error: " + result.status + "");
+    }
+
+    async function login() {
+        const username = document.getElementById('username').value;
+        const opts = await fetch(`http://localhost:8181/webauthn/authenticate/options?username=${username}`).then(r => r.json());
+
+        // Get the public key options json object and store it in the publicKeyOption variable.
+        const publicKeyOption = buildOptions(opts);
+
+        // Get the credential using the publicKeyOption object.
+        const cred = await navigator.credentials.get({ publicKey: publicKeyOption });
+
+        // Create a login response object.
+        const response = {
+            username: username,
+            credential: {
+                id: cred.id,
+                rawId: arrayBufferToBase64_v2(cred.rawId),
+                type: cred.type,
+                clientExtensionResults: updateClientExtensionResults(cred),
+                response: {
+                    authenticatorData: arrayBufferToBase64_v2(cred.response.authenticatorData),
+                    clientDataJSON: arrayBufferToBase64(cred.response.clientDataJSON),
+                    signature: arrayBufferToBase64_v2(cred.response.signature),
+                    userHandle: arrayBufferToBase64(cred.response.userHandle)
+                }
+            }
+        };
+
+        try {
+            const result = await fetch(`http://localhost:8181/webauthn/authenticate`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(response)
+            });
+
+            if(result.status !== 200) {
+              console.log("Error", result);
+            }
+
+            alert(await result.text());
+        }catch (e) {
+            console.log(e);
+        }
+    }
+
+    function buildOptions(opts) {
+        const publicKeyOption = opts.publicKey;
+
+        if(publicKeyOption.user) // Convert the base64 encoded user id to a Uint8Array.
+            publicKeyOption.user.id = Uint8Array.from(atob(publicKeyOption.user.id), c => c.charCodeAt(0));
+
+        if(publicKeyOption.allowCredentials)// Update the allowCredentials array to contain the Uint8Array credential ids.
+            publicKeyOption.allowCredentials = publicKeyOption.allowCredentials.map(c => ({
+                ...c,
+                id: base64ToArrayBuffer(c.id)
+            }));
+
+        // Convert the base64 encoded challenge to a Uint8Array./
+        publicKeyOption.challenge = base64ToArrayBuffer(publicKeyOption.challenge);
+        return publicKeyOption;
+    }
+
+    // Check if clientExtensionResults is null or undefined.
+    function updateClientExtensionResults(cred) {
+        return (cred.clientExtensionResults === undefined
+            || cred.clientExtensionResults === null) ? {} : cred.clientExtensionResults;
+    }
+
+    function arrayBufferToBase64(buffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    }
+
+    function arrayBufferToBase64_v2(buffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    function base64ToArrayBuffer(base64Input) {
+        let base64 = base64Input.replace(/-/g, '+').replace(/_/g, '/');
+        // Add padding if necessary (Base64 requires padding to be a multiple of 4)
+        while (base64.length % 4) {
+            base64 += '=';
+        }// Add padding if necessary (Base64 requires padding to be a multiple of 4)
+        while (base64.length % 4) {
+            base64 += '=';
+        }
+        const binary = atob(base64);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+        return array.buffer;
+    }
+</script>
+</body>
+</html>

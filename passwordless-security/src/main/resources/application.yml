@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: passwordless-security
+
+server:
+  port: 8181
+
+app:
+  origin: http://localhost:63342
+  rp-id: localhost
+  rp-name: "Passkey Demo"
+  jwt-secret: "super-secret-key-for-jwt-generation"
