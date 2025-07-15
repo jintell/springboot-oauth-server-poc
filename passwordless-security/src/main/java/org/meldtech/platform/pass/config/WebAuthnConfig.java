@@ -32,10 +32,5 @@ public class WebAuthnConfig {
                 .build();
     }
 
-//    @Primary
-//    @Bean
-//    public CredentialRepository credentialRepository() {
-//        return new InMemoryCredentialRepository();
-//    }
 }
 

@@ -7,10 +7,13 @@ import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
 import com.yubico.webauthn.extension.appid.AppId;
 import com.yubico.webauthn.extension.appid.InvalidAppIdException;
+import org.meldtech.platform.pass.model.AccessToken;
 import org.meldtech.platform.pass.model.AuthenticationResponsePayload;
 import org.meldtech.platform.pass.model.RegistrationResponsePayload;
-import org.meldtech.platform.pass.repository.InMemoryCredentialRepository;
+//import org.meldtech.platform.pass.repository.InMemoryCredentialRepository;
+import org.meldtech.platform.pass.repository.RedisCredentialRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,17 +24,22 @@ import static com.yubico.webauthn.data.ResidentKeyRequirement.REQUIRED;
 @Service
 public class PasskeyService {
     private  final RelyingParty relyingParty;
-    private  final InMemoryCredentialRepository credentialRepo;
+    private  final RedisCredentialRepository credentialRepo;
+//    private  final InMemoryCredentialRepository credentialRepo;
+    private final JwtService jwtService;
 
     private final Map<String, PublicKeyCredentialCreationOptions> registrationOptions = new HashMap<>();
     private final Map<String, PublicKeyCredentialRequestOptions> authOptions = new HashMap<>();
 
-    public PasskeyService(RelyingParty relyingParty, InMemoryCredentialRepository credentialRepo) {
+    public PasskeyService(RelyingParty relyingParty,
+                          RedisCredentialRepository credentialRepo,
+                          JwtService jwtService) {
         this.relyingParty = relyingParty;
         this.credentialRepo = credentialRepo;
+        this.jwtService = jwtService;
     }
 
-    public String startRegistration(String username) throws InvalidAppIdException, JsonProcessingException {
+    public Mono<String> startRegistration(String username) throws InvalidAppIdException, JsonProcessingException {
         UserIdentity user = UserIdentity.builder()
                 .name(username)
                 .displayName(username)
@@ -57,10 +65,10 @@ public class PasskeyService {
         );
 
         registrationOptions.put(username, options);
-        return options.toCredentialsCreateJson();
+        return Mono.justOrEmpty(options.toCredentialsCreateJson());
     }
 
-    public String finishRegistration(RegistrationResponsePayload payload) throws RegistrationFailedException {
+    public Mono<String> finishRegistration(RegistrationResponsePayload payload) throws RegistrationFailedException {
         var result = relyingParty.finishRegistration(FinishRegistrationOptions.builder()
                 .request(registrationOptions.get(payload.username()))
                 .response(payload.credential())
@@ -74,11 +82,11 @@ public class PasskeyService {
                 .signatureCount(result.getSignatureCount())
                 .build();
 
-        credentialRepo.save(regCred);
-        return "Registered successfully";
+        credentialRepo.save(payload.username(), regCred);
+        return Mono.justOrEmpty("Registered successfully");
     }
 
-    public String startAuthentication(String username) throws JsonProcessingException {
+    public Mono<String> startAuthentication(String username) throws JsonProcessingException {
         PublicKeyCredentialRequestOptions options = relyingParty.startAssertion(
                 StartAssertionOptions.builder()
                         .username(username)
@@ -88,10 +96,10 @@ public class PasskeyService {
         // Store options for later
         authOptions.put(username, options);
 
-        return options.toCredentialsGetJson();
+        return Mono.justOrEmpty(options.toCredentialsGetJson());
     }
 
-    public String finishAuthentication(AuthenticationResponsePayload payload) throws AssertionFailedException {
+    public Mono<AccessToken> finishAuthentication(AuthenticationResponsePayload payload) throws AssertionFailedException {
         PublicKeyCredentialRequestOptions request = authOptions.get(payload.username());
         AssertionResult result = relyingParty.finishAssertion(
                 FinishAssertionOptions.builder()
@@ -100,7 +108,7 @@ public class PasskeyService {
                         .build()
         );
 
-        return result.isSuccess() ? "Authentication successful" : "Authentication failed";
+        return result.isSuccess() ? Mono.justOrEmpty(jwtService.generateToken(payload.username())) : Mono.empty();
     }
 
     private AssertionRequest buildFinishAssertionOptions(PublicKeyCredentialRequestOptions request) {
@@ -108,6 +116,5 @@ public class PasskeyService {
                 .publicKeyCredentialRequestOptions(request)
                 .build();
     }
-
 
 }
