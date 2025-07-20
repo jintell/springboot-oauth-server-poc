@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.meldtech.platform.stock.service.grpc";
+option java_outer_classname = "StockProto";
+
+service StockMarketService {
+  rpc GetStockPrice (StockRequest) returns (StockResponse);
+  rpc StreamStockPrices (StockRequest) returns (stream StockResponse);
+}
+
+message StockRequest {
+  string symbol = 1;
+}
+
+message StockResponse {
+  int32 id = 1;
+  string symbol = 2;
+  string name = 3;
+  float price = 4;
+}

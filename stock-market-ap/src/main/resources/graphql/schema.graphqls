@@ -1,0 +1,41 @@
+type Stock {
+    id: ID!
+    symbol: String!
+    name: String!
+    price: Float!
+    createdOn: String!
+}
+
+type PortfolioResponse {
+    userId: String!
+    createdOn: String!
+    stocks: [Stock]!
+}
+
+input StockRequest {
+    symbol: String!
+    name: String!
+    price: Float!
+}
+
+
+input PortfolioRequest {
+    userId: String!
+    stocks: String!
+}
+
+
+type Query {
+    getPortfolio(userId: String!): PortfolioResponse
+    getStock(symbol: String!): Stock
+}
+
+type Mutation {
+#    buyStock(userId: ID!, symbol: String!, quantity: Int!): PortfolioResponse
+    addStock(request: StockRequest!): Stock
+    addPortfolio(request: PortfolioRequest!): PortfolioResponse
+}
+
+type Subscription {
+    stockPriceUpdates(symbol: String!): Stock
+}
