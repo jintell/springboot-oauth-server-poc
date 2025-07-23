@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: merchant_inventory_demo
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "root"
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_USER: "root"
+      DB_PASSWORD: "root"
+      GRAPH_QL_ENDPOINT: "http://localhost:9100/graphql"
+      SERVER_PORT: 9100
+    ports:
+      - "9100:9100"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

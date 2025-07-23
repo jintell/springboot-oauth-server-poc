@@ -1,0 +1,32 @@
+type StockInsightResponse {
+    symbol: String!
+    name: String!
+    marketCap: Float
+    peRatio: Float
+    revenueGrowth: Float
+    price: Float
+}
+
+input StockInsightRequest {
+    symbol: String!
+    name: String!
+    marketCap: Float
+    peRatio: Float
+    revenueGrowth: Float
+    price: Float
+}
+
+type Query {
+    getStockInsight(symbol: String!): StockInsightResponse
+    getStockInsights: [StockInsightResponse]
+    getStockInsightDetails: [StockInsightResponse]
+}
+
+type Mutation {
+    addStockInsight(request: StockInsightRequest!): StockInsightResponse
+    updateStockInsight(request: StockInsightRequest!): StockInsightResponse
+}
+
+type Subscription {
+    updateStockInsightPrice(symbol: String!): StockInsightResponse
+}

@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: gl-rest-app
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}?merchant_inventory_demo;?serverTimezone=UTC&useLegacyDatetimeCode=false
+    name: merchant_inventory_demo
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    pool:
+      enabled: true
+  graphql:
+    websocket:
+      path: /graphql
+
+
+server:
+  port: 9100
+
+graphql:
+  endpoint: ${GRAPH_QL_ENDPOINT}
