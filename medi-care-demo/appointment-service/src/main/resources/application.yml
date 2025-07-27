@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: appointment-service
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}?serverTimezone=UTC&useLegacyDatetimeCode=false
+    name: med_care_demo
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    pool:
+      enabled: true
+  grpc:
+    client:
+      channels:
+        doctorService:
+          address: 0.0.0.0:9092
+        patientService:
+          address: 0.0.0.0:9091
+
+server:
+  port: 9082

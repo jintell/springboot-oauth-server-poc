@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: patient-service
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}?serverTimezone=UTC&useLegacyDatetimeCode=false
+    name: med_care_demo
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    pool:
+      enabled: true
+  grpc:
+    server:
+      port: 9091
+server:
+  port: 9080

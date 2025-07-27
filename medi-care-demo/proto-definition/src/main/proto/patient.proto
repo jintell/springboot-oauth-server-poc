@@ -1,0 +1,25 @@
+syntax="proto3";
+
+option java_multiple_files = true;
+option java_package = "org.jade.platform.proto.definition";
+
+service PatientService {
+  rpc GetPatientDetail (PatientRequestWithId) returns (PatientResponse);
+  rpc GetPatientDetailByEmail (PatientRequestWithEmail) returns (PatientResponse);
+}
+
+message PatientRequestWithId {
+  int32 id = 1;
+}
+
+message PatientRequestWithEmail {
+  string email = 1;
+}
+
+message PatientResponse {
+  string firstName = 1;
+  string lastName = 2;
+  string email = 3;
+  string phone = 4;
+  string address = 5;
+}

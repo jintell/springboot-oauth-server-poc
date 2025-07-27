@@ -11,8 +11,12 @@
     <groupId>com.jade.platform</groupId>
     <artifactId>springboot-oauth-server-poc</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <name>springboot-oauth-server-poc</name>
     <description>springboot-oauth-server-poc</description>
+    <modules>
+        <module>med-care-demo</module>
+    </modules>
     <properties>
         <java.version>17</java.version>
     </properties>

@@ -1,0 +1,14 @@
+rootProject.name = 'medi-care-demo'
+
+include ':proto-definition'
+include ':patient-service'
+include ':doctor-service'
+include ':appointment-service'
+
+//dependencyResolutionManagement {
+//    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+//    repositories {
+//        google()
+//        mavenCentral()
+//    }
+//}
