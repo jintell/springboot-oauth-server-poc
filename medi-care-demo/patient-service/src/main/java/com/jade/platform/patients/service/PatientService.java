@@ -19,6 +19,7 @@ import reactor.core.publisher.SignalType;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -108,9 +109,8 @@ public class PatientService extends PatientServiceGrpc.PatientServiceImplBase {
 
 
     private <T> void processResponse(T value , StreamObserver<PatientResponse> responseObserver){
-        if(Objects.nonNull(value) && !checkEmpty(value)){
+        if(Objects.nonNull(value) && checkEmpty(""+value)){
             try {
-                System.out.println("Got here");
                 responseObserver.onNext((PatientResponse) value);
             }catch (Exception e){
                 System.err.println("Error here: "+e.getMessage());
@@ -121,8 +121,9 @@ public class PatientService extends PatientServiceGrpc.PatientServiceImplBase {
     }
 
     private <T> boolean checkEmpty(T data) {
-        String dataCheck = ""+data;
-        return dataCheck.trim().isBlank();
+        Predicate<T> isNotBlank = t -> t instanceof String && !((String) t).trim().isBlank();
+        Predicate<T> isNotEmpty = t -> t instanceof String && !((String) t).trim().isEmpty();
+        return isNotEmpty.and(isNotBlank).test(data);
     }
 
 }
