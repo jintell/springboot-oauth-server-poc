@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +95,17 @@ public class PatientService extends PatientServiceGrpc.PatientServiceImplBase {
                 .address(patient.address())
                 .build();
     }
+
+//    private PatientRecordResponse toResponse(Patient value){
+//        Function<Patient, PatientRecordResponse> converter = patient -> PatientRecordResponse.builder()
+//                .firstName(patient.firstName())
+//                .lastName(patient.lastName())
+//                .email(patient.email())
+//                .phone(patient.phone())
+//                .build();
+//        return converter.apply(value);
+//    }
+
 
     private <T> void processResponse(T value , StreamObserver<PatientResponse> responseObserver){
         if(Objects.nonNull(value) && !checkEmpty(value)){
